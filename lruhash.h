@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2025, Snail Games Inc.
+/* Copyright (c) 2006-2015, DNSPod Inc.
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,7 @@
  * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
 */
+
 #ifndef LRUHASH_H
 #define LRUHASH_H
 
@@ -33,10 +34,11 @@
 #include <stdio.h>
 #include "locks.h"
 
+
 struct lruhash_bucket;
 struct lruhash_entry;
 
-#define HASH_DEFAULT_ARRAY_SIZE 1024
+#define HASH_DEFAULT_ARRAY_SIZE     1024
 #define HASH_DEFAULT_MAXMEM     4*1024*1024
 
 typedef uint32_t hashvalue_t;
@@ -51,83 +53,86 @@ typedef void (*lruhash_printvalue_t)(void *);
 
 //LRU Hash table.
 struct lruhash {
-  lock_basic_t lock;
-  
-  /*lru hash functions*/
-  lruhash_sizefunc_t sizefunc;
-  lruhash_compfunc_t compfunc;
-  lruhash_delkeyfunc_t delkeyfunc;
-  lruhash_deldatafunc_t deldatafunc;
+    lock_basic_t lock;
 
-  //size of array, power of 2
-  size_t size;
-  //size bitmask
-  int size_mask;
-  //array of entry
-  struct lruhash_bucket *array;
-  
-  //lru list head and tail
-  struct lruhash_entry *lru_head;
-  struct lruhash_entry *lru_tail;
+    /* lru hash functions */
+    lruhash_sizefunc_t sizefunc;
+    lruhash_compfunc_t compfunc;
+    lruhash_delkeyfunc_t delkeyfunc;
+    lruhash_deldatafunc_t deldatafunc;
 
-  //num of entries
-  size_t num;
-  //used space
-  size_t space_used;
-  //max space allowed to use
-  size_t space_max;
+    //size of array, power of 2
+    size_t size;
+    //size bitmask
+    int size_mask;
+    //array of entry
+    struct lruhash_bucket *array;
+
+    //lru list head and tail
+    struct lruhash_entry *lru_head;
+    struct lruhash_entry *lru_tail;
+
+    //num of entries
+    size_t num;
+    //used space
+    size_t space_used;
+    //max space allowed to use
+    size_t space_max;
 };
 
-//linked list of overflowing entries
+//linked list of overflow entries
 struct lruhash_bucket {
-  struct lruhash_entry *overflow_list;
+    struct lruhash_entry *overflow_list;
 };
 
 //hash table entry
 struct lruhash_entry {
-  //lock for access to the contents of the entry
-  lock_basic_t lock;
+    //lock for access to the contents of the entry
+    lock_basic_t lock;
 
-  //next entry in overflow list
-  struct lruhash_entry *overflow_next;
-  
-  //next and prev entry in lru list
-  struct lruhash_entry *next;
-  struct lruhash_entry *prev;
-  
-  //hash value of the key
-  hashvalue_t hash;
+    //next entry in overflow list
+    struct lruhash_entry *overflow_next;
 
-  void *key;
-  void *data;
+    //next and prev entry in lru list
+    struct lruhash_entry *next;
+    struct lruhash_entry *prev;
+
+    //hash value of the key
+    hashvalue_t hash;
+
+    void *key;
+    void *data;
 };
 
 struct lruhash *lruhash_create(size_t size, size_t maxmem,
-  lruhash_sizefunc_t sizefunc, lruhash_compfunc_t compfunc,
-  lruhash_delkeyfunc_t delkeyfunc, lruhash_deldatafunc_t deldatafunc);
+    lruhash_sizefunc_t sizefunc, lruhash_compfunc_t compfunc,
+    lruhash_delkeyfunc_t delkeyfunc, lruhash_deldatafunc_t deldatafunc);
 
 void lruhash_delete(struct lruhash *table);
 
 void lruhash_clear(struct lruhash *table);
 
-void lruhash_insert(struct lruhash *table, hashvalue_t hash, struct lruhash_entry *entry, void *data);
+void lruhash_insert(struct lruhash *table, hashvalue_t hash, 
+    struct lruhash_entry *entry, void *data);
 
 void lruhash_remove(struct lruhash *table, hashvalue_t hash, void *key);
 
 //this function will lock the entry, unlock it when done.
 struct lruhash_entry *lruhash_lookup(struct lruhash *table,
-  hashvalue_t hash, void *key);
+    hashvalue_t hash, void *key);
 
-void lruhash_status(struct lruhash *table, lruhash_printkey_t print_key, lruhash_printvalue_t print_value);
+void lruhash_status(struct lruhash *table, lruhash_printkey_t print_key,
+    lruhash_printvalue_t print_value);
 
-/*for uint test*/
+
+/* for unit test */
 struct lruhash_entry *bucket_find_entry(struct lruhash *table, 
-  struct lruhash_bucket *bucket, hashvalue_t hash, void *key);
+    struct lruhash_bucket *bucket, hashvalue_t hash, void *key);
 
-void bucket_overflow_remove(struct lruhash *bucket, struct lruhash_entry *entry);
+void bucket_overflow_remove(struct lruhash_bucket *bucket,
+    struct lruhash_entry *entry);
 
 void lru_front(struct lruhash *table, struct lruhash_entry *entry);
-
 void lru_remove(struct lruhash *table, struct lruhash_entry *entry);
 /**/
 
