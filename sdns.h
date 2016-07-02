@@ -28,7 +28,7 @@
 #endif
 
 #ifndef __APPLE__
-#include <openssl/evp.h>
+#include "openssl/evp.h"
 #endif /*__APPLE__*/
 
 #include "lruhash.h"
@@ -98,7 +98,7 @@ struct sdns_env {
 
   //http dns server and port
   char *serv_ip;
-  int port;
+  unsigned int port;
   
   //dev_used
   int des_used;
@@ -106,6 +106,16 @@ struct sdns_env {
   char *des_key;
 };
 
+/* Begin added by xie hui */
+
+extern char *public_dnsserver;
+extern unsigned int public_dnsport;
+
+uint32_t http_response_errorcode;
+
+void sdns_set_publicdns_server_port(char *servip, unsigned int servport);
+void sdns_set_server_port(char *servip, unsigned int servport);
+/*End added by xiehui*/
 /**API*/
 
 //set cache and ttl before init env
